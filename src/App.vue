@@ -3,7 +3,7 @@
     <div id="app">
         <select-username
                 v-if="!usernameAlreadySelected"
-                @input="onUsernameSelection"
+                @input1="onUsernameSelection"
                 @usernameAlreadySelected="usernameAlreadySelected"
         />
         <chat v-else />
@@ -28,7 +28,7 @@
         methods: {
             onUsernameSelection(username) {
                 console.log(username)
-                // this.usernameAlreadySelected = true;
+                this.usernameAlreadySelected = true;
                 socket.auth = { username };
                 socket.connect();
             },
