@@ -1,0 +1,21 @@
+{
+  "name": "vue-chat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server/index.js",
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "lint": "vue-cli-service lint",
+    "dev": "node server/index.js",
+    "build": "vue-cli-service build",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "@vue/cli-service": "^5.0.8",
+    "core-js": "^3.26.1",
+    "socket.io": "^4.5.4",
+    "socket.io-client": "^4.5.4",
+    "vue": "^3.2.45",
+    "vue-template-compiler": "^2.7.14"
+  }
+}
