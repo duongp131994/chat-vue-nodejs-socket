@@ -18,7 +18,7 @@
     </ul>
 
     <form @submit.prevent="onSubmit" class="form">
-      <textarea v-model="input" placeholder="Your message..." class="input" />
+      <textarea v-model="inputValue" placeholder="Your message..." class="input"></textarea>
       <button :disabled="!isValid" class="send-button">Send</button>
     </form>
   </div>
@@ -32,18 +32,19 @@ export default {
   components: {
     StatusIcon,
   },
+  emits: ['formSend'],
   props: {
     user: Object,
   },
   data() {
     return {
-      input: "",
+      inputValue: "",
     };
   },
   methods: {
     onSubmit() {
-      this.$emit("input", this.input);
-      this.input = "";
+      this.$emit("formSend", this.inputValue);
+      this.inputValue = "";
     },
     displaySender(message, index) {
       return (
@@ -55,7 +56,7 @@ export default {
   },
   computed: {
     isValid() {
-      return this.input.length > 0;
+      return this.inputValue.length > 0;
     },
   },
 };

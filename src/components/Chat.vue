@@ -12,7 +12,7 @@
     <message-panel
       v-if="selectedUser"
       :user="selectedUser"
-      @input="onMessage"
+      @formSend="onMessage"
       class="right-panel"
     />
   </div>
@@ -35,6 +35,7 @@ export default {
   methods: {
     onMessage(content) {
       if (this.selectedUser) {
+        console.log(this.selectedUser, content)
         socket.emit("private message", {
           content,
           to: this.selectedUser.userID,
