@@ -73,7 +73,8 @@ export default {
       user.hasNewMessages = false;
     };
 
-    socket.on("users", (users) => {
+    //duoc thong bao list user khi co user connect
+    socket.on("list-users", (users) => {
       users.forEach((user) => {
         user.self = user.userID === socket.id;
         initReactiveProperties(user);
@@ -87,11 +88,13 @@ export default {
       });
     });
 
+    //tuong tu tren nhung chi nhan user moi connect
     socket.on("user connected", (user) => {
       initReactiveProperties(user);
       this.users.push(user);
     });
 
+    //khi co 1 user dis
     socket.on("user disconnected", (id) => {
       for (let i = 0; i < this.users.length; i++) {
         const user = this.users[i];

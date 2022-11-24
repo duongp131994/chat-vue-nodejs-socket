@@ -26,7 +26,7 @@ io.on("connection", (socket) => {
     }
 
     console.log(users)
-    socket.emit("users", users);
+    socket.emit("list-users", users);
 
     socket.broadcast.emit("user connected", {
         userID: socket.id,
