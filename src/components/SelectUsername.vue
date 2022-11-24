@@ -24,13 +24,11 @@ export default {
   methods: {
     changeInput(e) {
       this.username = e.target.value
-      console.log(this.username)
       if (e.key === "Enter") {
         this.$emit("input1", this.username);
       }
     },
     onSubmit() {
-      console.log(this.username)
       this.$emit("input1", this.username);
     },
   },
