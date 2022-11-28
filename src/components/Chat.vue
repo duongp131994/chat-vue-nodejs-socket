@@ -1,15 +1,23 @@
 <template>
-    <div class="vue-tempalte">
-        <form>
-            <h3>Forgot Password</h3>
-            <div class="form-group">
-                <label>Email address</label>
-                <input type="email" class="form-control form-control-lg" />
-            </div>
-            <button type="submit" class="btn btn-dark btn-lg btn-block">Reset password</button>
-        </form>
+    <div>
+        <div class="left-panel">
+            <user
+                    v-for="userId in userIds"
+                    :key="userId"
+                    :user="users[userId]"
+                    :selected="selectedUser === users[userId]"
+                    @select="onSelectUser(users[userId])"
+            />
+        </div>
+        <message-panel
+                v-if="selectedUser"
+                :user="selectedUser"
+                @formSend="onMessage"
+                class="right-panel"
+        />
     </div>
 </template>
+
 <script>
     export default {
         data() {

@@ -30,10 +30,15 @@
 <script>
     import socket from "../socket";
     export default {
+        props: {
+            initialPassword: String,
+            initialUserName: String
+        },
+        emits: ['changeState'],
         data() {
             return {
-                email: '',
-                password: '',
+                email: this.initialUserName,
+                password: this.initialPassword,
                 showPassword: false,
                 reg: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/
             }
@@ -50,22 +55,13 @@
                 }
             },
             signIn() {
+                this.$emit('changeState', [['userName', this.email], ['password', this.password]])
                 this.$soketio.auth = {username: this.email, password: this.password, createNew: false};
 
                 this.$soketio.connect();
             }
         },
         created() {
-            const chatUserName = localStorage.getItem("chatUserName");
-            const chatUserPass = localStorage.getItem("chatUserPass");
-
-            if (chatUserName) {
-                this.email = chatUserName
-            }
-            if (chatUserPass) {
-                this.password = chatUserPass
-            }
-
             this.$soketio.on("connect_error", (err) => {
                 alert(`connect error due to ${err.message}`);
             });

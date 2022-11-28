@@ -39,8 +39,8 @@
                 userAlready: false,
                 conversions: [],
                 test: true,
-                password: '',
-                userName: ''
+                password: localStorage.getItem("chatUserPass"),
+                userName: localStorage.getItem("chatUserName")
             };
         },
         methods: {
@@ -58,12 +58,10 @@
         },
         created() {
             let socket = this.$soketio
-            const username = localStorage.getItem("chatUserName");
-            const password = localStorage.getItem("chatUserPass");
 
-            if (username && password) {
-                console.log(username, password, this.userName, this.password)
-                socket.auth = {username, password, createNew: false};
+            if (this.userName && this.password) {
+                console.log( this.userName, this.password)
+                socket.auth = {username: this.userName, password: this.password, createNew: false};
 
                 socket.connect();
             }

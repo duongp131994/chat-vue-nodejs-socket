@@ -35,7 +35,6 @@
 <script>
     export default {
         props: {
-            conversions: Array,
             initialPassword: String,
             initialUserName: String
         },
@@ -92,16 +91,6 @@
             }
         },
         created() {
-            const chatUserName = localStorage.getItem("chatUserName");
-            const chatUserPass = localStorage.getItem("chatUserPass");
-
-            if (chatUserName) {
-                this.email = chatUserName
-            }
-            if (chatUserPass) {
-                this.password = chatUserPass
-            }
-
             this.$soketio.on("connect_error", (err) => {
                 alert(`connect error due to ${err.message}`);
             });
