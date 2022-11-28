@@ -11,8 +11,16 @@ class Model {
 
         this.db.connect(function(err) {
             if (err) throw err;
-            console.log("Connected db!");
+            console.log("Connected db!" + Date.now());
         });
+    }
+
+    runningQuery (db, sql, callBack) {
+        db.query(sql , (err, result) => {
+            if (err) return 'dmdmdmdmdm';
+
+            return callBack(result)
+        })
     }
 }
 
@@ -36,11 +44,11 @@ class ModelContent extends Model {
         });
     }
 
-    insertInto({data}) {
-        let content = data['content'] || '';
-        let send_date = data['date'] || Date.now();
-        let conversion_id = data['conversion_id'] || '';
-        let user_id = data['user_id'] || '';
+    insertInto({content, date, conversion_id, user_id}) {
+        content = content || '';
+        let send_date = date || Date.now();
+        conversion_id = conversion_id || '';
+        user_id = user_id || '';
         let b={content:content,send_date:send_date, conversion_id:conversion_id, user_id:user_id};
         this.db.query('insert into chat_content SET ?', b , function(err, result) {
             if (err) throw err;
@@ -71,10 +79,15 @@ class ModelContent extends Model {
         });
     }
 
-    selectAllInConversionTime({conversionId, date}) {
+    selectAllInConversionTime({conversionId, date, minDate}) {
         let conversion_id = conversionId || '';
-        var sql = 'SELECT * FROM chat_content WHERE conversion_id = ? AND send_date > ?';
-        this.db.query(sql, [conversion_id, date], function (err, result) {
+        let data = [conversion_id, date]
+        var sql = 'SELECT * FROM chat_content WHERE conversion_id = ? AND send_date >= ?';
+        if (minDate !== '') {
+            sql += ' AND send_date <= ?'
+            data.push(minDate)
+        }
+        this.db.query(sql, data, function (err, result) {
             if (err) throw err;
 
             return result;
@@ -89,13 +102,15 @@ class ModelContent extends Model {
             console.log("Number of records deleted: " + result.affectedRows);
         });
     }
+
 }
 
 class ModelUser extends Model {
     createTable() {
         var sql = `CREATE TABLE IF NOT EXISTS chat_user (
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
-            name varchar(255),
+            username varchar(255),
+            password varchar(255),
             log_out_date datetime,
             params TEXT
         )`;
@@ -105,11 +120,11 @@ class ModelUser extends Model {
         });
     }
 
-    insertInto({data}) {
-        let name = data['name'] || '';
+    insertInto({userName, params, password}) {
+        let username = userName || '';
         let log_out_date = Date.now();
-        let params = data['params'] || JSON.stringify({});
-        let b={name:name,log_out_date:log_out_date, params:params};
+        params = params || JSON.stringify({});
+        let b={username:username,password:password,log_out_date:log_out_date, params:params};
         this.db.query('insert into chat_user SET ?', b , function(err, result) {
             if (err) throw err;
 
@@ -123,19 +138,23 @@ class ModelUser extends Model {
         let sql = 'UPDATE chat_user SET '
         let b=[]
 
-        if (typeof data['name'] !== 'undefined') {
-            sql += 'name=?'
-            b.push(data['name'])
+        if (typeof data.username !== 'undefined') {
+            sql += 'username=?'
+            b.push(data.username)
         }
-        if (typeof data['log_out_date'] !== 'undefined') {
+        if (typeof data.log_out_date !== 'undefined') {
             sql += ',log_out_date=?'
-            b.push(data['log_out_date'])
+            b.push(data.log_out_date)
         }
-        if (typeof data['params'] !== 'undefined') {
+        if (typeof data.password !== 'undefined') {
+            sql += ',password=?'
+            b.push(data.password)
+        }
+        if (typeof data.params !== 'undefined') {
             sql += ',params=?'
-            b.push(data['params'])
+            b.push(data.params)
         }
-        b.push(data['id'])
+        b.push(data.id)
 
         this.db.query(sql + ' WHERE id = ?', b , function(err, result) {
             if (err) throw err;
@@ -146,13 +165,32 @@ class ModelUser extends Model {
         });
     }
 
-    selectUser({userId}) {
-        let sql = 'SELECT * FROM chat_user WHERE id = ' + mysql.escape(userId || '');
-        this.db.query(sql , function(err, result) {
-            if (err) throw err;
+    selectUser({userId, userName, callback}) {
+        var sql = ''
+        if (userName !== '') {
+            sql = 'SELECT * FROM chat_user WHERE username = ' + mysql.escape(userName);
+        } else if (userId) {
+            sql = 'SELECT * FROM chat_user WHERE id = ' + mysql.escape(userId);
+        }
+        if (sql !== '') {
+            var db = this.db
+            return new Promise(function(resolve) {
+                this.runningQuery(db, sql, (data) => {
 
-            return result;
-        });
+                })
+                db.query(sql , (err, result) => {
+                    if (err) return 'dmdmdmdmdm';
+
+                    return result
+
+                }).then((data) => {
+                    return data
+                });
+            });
+
+        } else {
+            return 'dm'
+        }
     }
 }
 class ModelConversion extends Model {
@@ -204,7 +242,7 @@ class ModelConversion extends Model {
         });
     }
 
-    selectUser({id}) {
+    selectConversion({id}) {
         let sql = 'SELECT * FROM chat_conversion WHERE id = ' + mysql.escape(id || '');
         this.db.query(sql , function(err, result) {
             if (err) throw err;
