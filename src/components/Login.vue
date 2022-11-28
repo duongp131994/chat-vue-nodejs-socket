@@ -50,9 +50,9 @@
                 }
             },
             signIn() {
-                socket.auth = {username: this.email, password: this.password, createNew: false};
+                this.$soketio.auth = {username: this.email, password: this.password, createNew: false};
 
-                socket.connect();
+                this.$soketio.connect();
             }
         },
         created() {
@@ -66,12 +66,12 @@
                 this.password = chatUserPass
             }
 
-            socket.on("connect_error", (err) => {
+            this.$soketio.on("connect_error", (err) => {
                 alert(`connect error due to ${err.message}`);
             });
         },
         destroyed() {
-            socket.off("connect_error");
+            this.$soketio.off("connect_error");
         }
     }
 </script>

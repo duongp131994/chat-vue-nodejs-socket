@@ -36,18 +36,19 @@ class ModelContent extends Model {
         });
     }
 
-    insertInto({content, date, conversion_id, user_id}) {
-        content = content || '';
-        let send_date = date || Date.now();
-        conversion_id = conversion_id || '';
-        user_id = user_id || '';
-        let b={content:content,send_date:send_date, conversion_id:conversion_id, user_id:user_id};
-        this.db.query('insert into chat_content SET ?', b , function(err, result) {
-            if (err) throw err;
+    insertContent({content, date, conversion_id, user_id}) {
+        return new Promise((resolve, reject) => {
+            content = content || '';
+            let send_date = date || Date.now();
+            conversion_id = conversion_id || '';
+            user_id = user_id || '';
+            let b={content:content,send_date:send_date, conversion_id:conversion_id, user_id:user_id};
+            this.db.query('insert into chat_content SET ?', b , function(err, result) {
+                if (err) reject(result);
+                console.log("1 record inserted");
 
-            console.log("1 record inserted");
-
-            return result;
+                resolve(result);
+            });
         });
     }
 
@@ -64,6 +65,7 @@ class ModelContent extends Model {
     selectAllInConversionLimit({conversionId, limit}) {
         return new Promise((resolve, reject) => {
             let conversion_id = conversionId || '';
+            limit = limit || 30;
             let sql = 'SELECT * FROM chat_content WHERE conversion_id = '
                 + mysql.escape(conversion_id) + ' order by send_date DESC LIMIT '
                 + mysql.escape(limit);
@@ -118,11 +120,11 @@ class ModelUser extends Model {
         });
     }
 
-    insertInto({userName, params, password}) {
+    insertUser({userName, params, password}) {
         return new Promise((resolve, reject) => {
             let username = userName || '';
             let log_out_date = Date.now();
-            params = params || JSON.stringify({conversion: []});
+            params = params || JSON.stringify({conversion: [1]});
             let b={username:username,password:password,log_out_date:log_out_date, params:params};
             this.db.query('insert into chat_user SET ?', b , function(err, result) {
                 if (err) reject(false);
@@ -195,16 +197,15 @@ class ModelConversion extends Model {
         });
     }
 
-    insertInto({data}) {
-        let name = data['name'] || '';
-        let users = data['users'] || JSON.stringify({});
-        let b={name:name, users:users};
-        this.db.query('insert into chat_conversion SET ?', b , function(err, result) {
-            if (err) throw err;
-
-            console.log("1 record inserted");
-
-            return result;
+    insertInto(data) {
+        return new Promise((resolve, reject) => {
+            let name = data['name'] || '';
+            let users = data['users'] || JSON.stringify({});
+            let b={name:name, users:users};
+            this.db.query('insert into chat_conversion SET ?', b , function(err, result) {
+                if (err) reject(false);
+                resolve(result)
+            });
         });
     }
 
@@ -232,11 +233,12 @@ class ModelConversion extends Model {
     }
 
     selectConversion({id}) {
-        let sql = 'SELECT * FROM chat_conversion WHERE id = ' + mysql.escape(id || '');
-        this.db.query(sql , function(err, result) {
-            if (err) throw err;
-
-            return result;
+        return new Promise((resolve, reject) => {
+            let sql = 'SELECT * FROM chat_conversion WHERE id = ' + mysql.escape(id || '');
+            this.db.query(sql , function(err, result) {
+                if (err) reject(false);
+                resolve(result)
+            });
         });
     }
 }

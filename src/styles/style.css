@@ -124,16 +124,22 @@ label {
   -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.08);
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.08);
 }
-#app .show-icon {
+#app .vue-tempalte .show-icon {
   border: none;
   position: absolute;
-  bottom: 0;
+  top: 0;
   right: 0;
   line-height: 2.8rem;
   background: none;
+  margin-top: 23px;
 }
 #app .form-group {
   position: relative;
+  margin-top: 10px;
+}
+#app .password-note {
+  font-size: 14px;
+  font-style: italic;
 }
 #app .login-form button {
   margin-top: 10px;

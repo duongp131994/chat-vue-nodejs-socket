@@ -6,10 +6,30 @@ const modelContent = new ModelContent();
 const modelUser = new ModelUser();
 const modelConversion = new ModelConversion();
 
-
 modelContent.createTable()
 modelUser.createTable()
 modelConversion.createTable()
+
+async function craeteRoot() {
+    let user = await modelUser.selectUser({userName: 'root@gmail.com'})
+    if (!(user && user.length > 0)) {
+        await modelUser.insertUser({
+            userName: 'root@gmail.com',
+            password: '41a67a17f83673c511a8c0f6b55c6ee7e0faa8de66dd9c026fcc3dec'
+        })
+    }
+    let chatContent = await modelContent.selectAllInConversionLimit({conversionId: 1, limit: 1})
+    if (!(chatContent && chatContent.length > 0)) {
+        await modelContent.insertContent({content: 'Welcome to vndandelions.com ', conversion_id: 1, user_id: 1})
+    }
+    let Conversion = await modelConversion.selectConversion({id: 1})
+    if (!(Conversion && Conversion.length > 0)) {
+        await modelConversion.insertInto({name: 'Welcome', users: 1})
+    }
+}
+
+craeteRoot()
+
 
 const io = require("socket.io")(httpServer, {
     cors: {
@@ -41,7 +61,7 @@ io.use(async (socket, next) => {
 
     if (createNew) {
         socket.newUser = true;
-        if (user && user.length < 1) {
+        if (!(user && user.length > 0)) {
             socket.username = userName;
             socket.cryptoPassword = cryptoPassword;
             return next();
@@ -50,7 +70,7 @@ io.use(async (socket, next) => {
         return next();
     }
     console.clear()
-    console.log(user)
+    console.log(user, cryptoPassword, user[0]?.password);
     if (password) {
         if (user && user.length > 0 && cryptoPassword === user[0]?.password) {//session exist
             socket.newUser = false;
@@ -83,11 +103,11 @@ io.on("connection", async (socket) => {
 
     if (socket.newUser) {
         console.log(`new user connection`);
-        const user = await modelUser.insertInto({userName:socket.username, password:socket.cryptoPassword})
+        const user = await modelUser.insertUser({userName:socket.username, password:socket.cryptoPassword})
         socket.userId = user.insertId;
         socket.date = Date.now();
         socket.params = {
-            conversion: []
+            conversion: [1]
         };
         console.log(`new user connection :${socket.userId}`);
     }
@@ -110,11 +130,18 @@ io.on("connection", async (socket) => {
         connected: true,
     });
 
-    //conversion details
+    //conversionContents details
     if (!socket.params?.conversion) {
         socket.emit("conversionContents", []);
     } else {
-        await getConversions({socket, ids: socket.params?.conversion, limit: 30});
+        await getConversionsContents({socket, ids: socket.params?.conversion, limit: 30});
+    }
+
+    //conversion details
+    if (!socket.params?.conversion) {
+        socket.emit("conversion-details", []);
+    } else {
+        await getConversions({socket, ids: socket.params?.conversion});
     }
 
     // forward the private message to the right recipient
@@ -123,7 +150,7 @@ io.on("connection", async (socket) => {
     socket.on("private message", ({ content, to }) => {
         console.log(content, to, socket.userId)
         let date = Date.now();
-        let chatContent = modelContent.insertInto({content:content, date:date, conversion_id: to, user_id:socket.userId})
+        let chatContent = modelContent.insertContent({content:content, date:date, conversion_id: to, user_id:socket.userId})
         if (typeof chatContent.insertId !== 'undefined') {
             socket.to(to).to(socket.userId).emit("private message", {
                 content,
@@ -150,6 +177,19 @@ io.on("connection", async (socket) => {
 });
 
 const getConversions = async function (data) {
+    const listConversions = [];
+    let ids = data.ids || []
+
+    if (ids.length > 0) {
+        for (let id in ids) {
+            let conversion = await modelConversion.selectConversion({id: ids[id]}) || []
+            listConversions.push(conversion[0] || []);
+        }
+    }
+
+    data.socket.emit("conversion-details", listConversions);
+}
+const getConversionsContents = async function (data) {
     const listChat = {};
     var firstChat = [];
     let ids = data.ids || []
@@ -168,10 +208,10 @@ const getConversions = async function (data) {
             let last = listChat[ids[id]].at(-1) || null;
             if (firstChat.length > 0) {
                 if (last?.send_date > firstChat[1]) {
-                    firstChat = [id, last?.send_date]
+                    firstChat = [ids[id], last?.send_date]
                 }
             } else {
-                firstChat = [id, last?.send_date]
+                firstChat = [ids[id], last?.send_date]
             }
         }
     }

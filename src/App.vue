@@ -23,14 +23,13 @@
         <div class="App">
             <div class="vertical-center">
                 <div class="inner-block">
-                    <router-view :userAlready="onUsernameSelection"/>
+                    <router-view :userAlready="onUsernameSelection" :conversions="conversions" :initialUserName="userName" :initialPassword="password" @changeState="changeState"/>
                 </div>
             </div>
         </div>
     </div>
 </template>
 <script>
-    import socket from "./socket";
     import router from './router'
     export default {
         name: "App",
@@ -45,6 +44,9 @@
             };
         },
         methods: {
+            changeState(datas) {
+                datas.map(data => this[data[0]] = data[1])
+            },
             onUsernameSelection() {
 
             },
@@ -55,6 +57,7 @@
             }
         },
         created() {
+            let socket = this.$soketio
             const username = localStorage.getItem("chatUserName");
             const password = localStorage.getItem("chatUserPass");
 
@@ -66,17 +69,17 @@
             }
 
             socket.on('session-details', ({userId, params}) => {
-                console.log(userId, params);
+                console.log(userId, params, this.userName, this.password);
 
                 this.userAlready = true;
                 this.conversions = params?.conversion;
-                socket.auth = {userId};
                 localStorage.setItem("chatUserName", this.userName);
                 localStorage.setItem("chatUserPass", this.password);
 
                 // save the ID of the user
-                socket.userId = userId;
                 socket.sessionID = this.conversions[0] || null;
+
+                router.push({ name: 'home'})
             })
 
             if (!this.userAlready) {
@@ -85,10 +88,11 @@
 
             socket.on('error-connection', (data) => {
                 alert(data.error);
+                router.push({ name: 'login'})
             })
         },
         destroyed() {
-            socket.off("connect_error");
+            this.$soketio.off("connect_error");
         }
     }
 </script>
