@@ -14,14 +14,6 @@ class Model {
             console.log("Connected db!" + Date.now());
         });
     }
-
-    runningQuery (db, sql, callBack) {
-        db.query(sql , (err, result) => {
-            if (err) return 'dmdmdmdmdm';
-
-            return callBack(result)
-        })
-    }
 }
 
 class ModelContent extends Model {
@@ -34,7 +26,7 @@ class ModelContent extends Model {
         var sql = `CREATE TABLE IF NOT EXISTS chat_content (
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
             content TEXT, 
-            send_date datetime,
+            send_date varchar(100),
             conversion_id INT(11), 
             user_id INT(11)
         )`;
@@ -70,28 +62,34 @@ class ModelContent extends Model {
     }
 
     selectAllInConversionLimit({conversionId, limit}) {
-        let conversion_id = conversionId || '';
-        let sql = 'SELECT * FROM chat_content WHERE conversion_id = ' + mysql.escape(conversion_id) + ' order by send_date DESC LIMIT ' + mysql.escape(limit);
-        this.db.query(sql , function(err, result) {
-            if (err) throw err;
+        return new Promise((resolve, reject) => {
+            let conversion_id = conversionId || '';
+            let sql = 'SELECT * FROM chat_content WHERE conversion_id = '
+                + mysql.escape(conversion_id) + ' order by send_date DESC LIMIT '
+                + mysql.escape(limit);
+            this.db.query(sql, function (err, result) {
+                if (err) reject(result);
 
-            return result;
-        });
+                resolve(result);
+            });
+        })
     }
 
     selectAllInConversionTime({conversionId, date, minDate}) {
-        let conversion_id = conversionId || '';
-        let data = [conversion_id, date]
-        var sql = 'SELECT * FROM chat_content WHERE conversion_id = ? AND send_date >= ?';
-        if (minDate !== '') {
-            sql += ' AND send_date <= ?'
-            data.push(minDate)
-        }
-        this.db.query(sql, data, function (err, result) {
-            if (err) throw err;
+        return new Promise((resolve, reject) => {
+            let conversion_id = conversionId || '';
+            let data = [conversion_id, date]
+            var sql = 'SELECT * FROM chat_content WHERE conversion_id = ? AND send_date >= ?';
+            if (minDate !== '') {
+                sql += ' AND send_date <= ?'
+                data.push(minDate)
+            }
+            this.db.query(sql, data, function (err, result) {
+                if (err) reject(result);
 
-            return result;
-        });
+                resolve(result);
+            });
+        })
     }
 
     deleteConversion({conversionId}) {
@@ -111,7 +109,7 @@ class ModelUser extends Model {
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
             username varchar(255),
             password varchar(255),
-            log_out_date datetime,
+            log_out_date varchar(100),
             params TEXT
         )`;
         this.db.query(sql, function (err, result) {
@@ -121,76 +119,67 @@ class ModelUser extends Model {
     }
 
     insertInto({userName, params, password}) {
-        let username = userName || '';
-        let log_out_date = Date.now();
-        params = params || JSON.stringify({});
-        let b={username:username,password:password,log_out_date:log_out_date, params:params};
-        this.db.query('insert into chat_user SET ?', b , function(err, result) {
-            if (err) throw err;
+        return new Promise((resolve, reject) => {
+            let username = userName || '';
+            let log_out_date = Date.now();
+            params = params || JSON.stringify({conversion: []});
+            let b={username:username,password:password,log_out_date:log_out_date, params:params};
+            this.db.query('insert into chat_user SET ?', b , function(err, result) {
+                if (err) reject(false);
 
-            console.log("1 record inserted");
-
-            return result;
+                resolve(result)
+            });
         });
     }
 
-    updateInto({data}) {
+    updateInto(data) {
         let sql = 'UPDATE chat_user SET '
+        let sql1 = ''
         let b=[]
 
         if (typeof data.username !== 'undefined') {
-            sql += 'username=?'
+            sql1 += sql1 === '' ? 'username=?' : ',username=?'
             b.push(data.username)
         }
         if (typeof data.log_out_date !== 'undefined') {
-            sql += ',log_out_date=?'
+            sql1 += sql1 === '' ? 'log_out_date=?' : ',log_out_date=?'
             b.push(data.log_out_date)
         }
         if (typeof data.password !== 'undefined') {
-            sql += ',password=?'
+            sql1 += sql1 === '' ? 'password=?' : ',password=?'
             b.push(data.password)
         }
         if (typeof data.params !== 'undefined') {
-            sql += ',params=?'
+            sql1 += sql1 === '' ? 'params=?' : ',params=?'
             b.push(data.params)
         }
+
+        sql += sql1
         b.push(data.id)
 
         this.db.query(sql + ' WHERE id = ?', b , function(err, result) {
             if (err) throw err;
 
-            console.log("1 record inserted");
 
             return result;
         });
     }
-
-    selectUser({userId, userName, callback}) {
-        var sql = ''
-        if (userName !== '') {
-            sql = 'SELECT * FROM chat_user WHERE username = ' + mysql.escape(userName);
-        } else if (userId) {
-            sql = 'SELECT * FROM chat_user WHERE id = ' + mysql.escape(userId);
-        }
-        if (sql !== '') {
-            var db = this.db
-            return new Promise(function(resolve) {
-                this.runningQuery(db, sql, (data) => {
-
-                })
-                db.query(sql , (err, result) => {
-                    if (err) return 'dmdmdmdmdm';
-
-                    return result
-
-                }).then((data) => {
-                    return data
-                });
-            });
-
-        } else {
-            return 'dm'
-        }
+    selectUser ({userId, userName}) {
+        return new Promise((resolve, reject) => {
+            let sql = ''
+            if (userName !== '') {
+                sql = 'SELECT * FROM chat_user WHERE username = ' + mysql.escape(userName);
+            } else if (userId) {
+                sql = 'SELECT * FROM chat_user WHERE id = ' + mysql.escape(userId);
+            }
+            if (sql === '') {
+                reject(false);
+            }
+            this.db.query(sql , function (err, result, fields) {
+                if (err) reject(false);
+                resolve(result)
+            })
+        });
     }
 }
 class ModelConversion extends Model {

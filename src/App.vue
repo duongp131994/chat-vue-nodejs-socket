@@ -37,8 +37,8 @@
         components: {},
         data() {
             return {
-                userAlready: true,
-                login: true,
+                userAlready: false,
+                conversions: [],
                 test: true,
                 password: '',
                 userName: ''
@@ -50,6 +50,7 @@
             },
             onLogOut() {
                 this.userAlready = false;
+                localStorage.removeItem('chatUserName');
                 router.push({ name: 'login'})
             }
         },
@@ -57,32 +58,34 @@
             const username = localStorage.getItem("chatUserName");
             const password = localStorage.getItem("chatUserPass");
 
-            // if (username && password) {
-            if (this.test) {
-                this.password = 'password';
-                this.username = 'username1';
-                console.log(this.password, this.username, this.test)
-                // socket.auth = {username, password, createNew: false};
-                socket.auth = {username: this.username, password: this.password, createNew: true};
+            if (username && password) {
+                console.log(username, password, this.userName, this.password)
+                socket.auth = {username, password, createNew: false};
 
-                this.test = false
                 socket.connect();
             }
 
-            socket.on('session-details', ({sessionID, userId, params}) => {
+            socket.on('session-details', ({userId, params}) => {
+                console.log(userId, params);
+
+                this.userAlready = true;
+                this.conversions = params?.conversion;
                 socket.auth = {userId};
                 localStorage.setItem("chatUserName", this.userName);
                 localStorage.setItem("chatUserPass", this.password);
 
                 // save the ID of the user
-                socket.sessionID = sessionID;
                 socket.userId = userId;
+                socket.sessionID = this.conversions[0] || null;
             })
 
-            if (!this.userAlready && this.login) {
+            if (!this.userAlready) {
                 router.push({ name: 'login'})
             }
 
+            socket.on('error-connection', (data) => {
+                alert(data.error);
+            })
         },
         destroyed() {
             socket.off("connect_error");

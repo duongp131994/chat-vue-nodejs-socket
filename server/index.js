@@ -11,9 +11,6 @@ modelContent.createTable()
 modelUser.createTable()
 modelConversion.createTable()
 
-const bcrypt = require('bcrypt');
-const saltRounds = 5;
-
 const io = require("socket.io")(httpServer, {
     cors: {
         origin: "*",
@@ -28,35 +25,41 @@ const { InMemorySessionStore } = require("./sessionStore");
 const sessionStore = new InMemorySessionStore();
 
 io.use(async (socket, next) => {
-    let userName = socket.handshake.auth.username;
-    if (!userName) {
-        return next(new Error("invalid username"));
-    }
+    const userName = socket.handshake.auth.username;
     const createNew = socket.handshake.auth.createNew;
 
-    var user1 = null;
-    let user = await modelUser.selectUser({userName, callback: (result) => {
-        if (result) {
-            user1 = result
-            console.log(user1)
-        }
-    }});
+    const password = socket.handshake.auth.password;
+    const cryptoPassword = crypto.SHA3("Message", { outputLength: 224 }).toString();
 
-    if (createNew) {
-        await createNewUser({user, socket, next})
+    if (!userName) {
+        socket.error = 'User name not valid'
+        return next();
     }
 
-    const password = socket.handshake.auth.password;
-    socket.cryptoPassword = crypto.AES.encrypt(password, 'dandelions').toString();
+    let user = await modelUser.selectUser({userName});
 
+
+    if (createNew) {
+        socket.newUser = true;
+        if (user && user.length < 1) {
+            socket.username = userName;
+            socket.cryptoPassword = cryptoPassword;
+            return next();
+        }
+        socket.error = 'User name existed'
+        return next();
+    }
+    console.clear()
+    console.log(user)
     if (password) {
-        if (user && socket.cryptoPassword === user.password) {//session exist
+        if (user && user.length > 0 && cryptoPassword === user[0]?.password) {//session exist
             socket.newUser = false;
-            socket.userId = id;
+            socket.userId = user[0].id;
             socket.date = Date.now();
-            socket.username = user.username;
-            socket.params = JSON.parse(user.params);
-            modelUser.updateInto({id:socket.userId,log_out_date:socket.date})
+            socket.username = user[0].username;
+            socket.params = JSON.parse(user[0].params);
+
+            modelUser.updateInto({id: socket.userId, log_out_date: socket.date})
             return next();
         } else {
             return next(new Error("Login failed"));
@@ -65,23 +68,22 @@ io.use(async (socket, next) => {
     next();
 });
 
-var createNewUser = function ({user, socket, next}) {
-    console.log('user')
-    console.log(user)
-    if (user && user.length < 1) {
-        socket.newUser = true;
-        socket.username = 'userName';
-        return next();
+io.on("connection", async (socket) => {
+    if (socket.error) {
+        socket.join(randomId);
+        socket.emit('error-connection', {
+            error: socket.error
+        })
+        socket.disconnect(true)
+        return false;
     }
-    return next(new Error("Create failed"));
-}
 
-io.on("connection", (socket) => {
     //saving session
-    console.log('connection')
-    socket.disconnect(true)
+    console.log('connection!')
+
     if (socket.newUser) {
-        const user = modelUser.insertInto({userName:socket.username, password:socket.cryptoPassword})
+        console.log(`new user connection`);
+        const user = await modelUser.insertInto({userName:socket.username, password:socket.cryptoPassword})
         socket.userId = user.insertId;
         socket.date = Date.now();
         socket.params = {
@@ -91,6 +93,7 @@ io.on("connection", (socket) => {
     }
 
     //join room
+    console.log(socket.userId);
     socket.join(socket.userId);
 
     //pass session details
@@ -108,9 +111,11 @@ io.on("connection", (socket) => {
     });
 
     //conversion details
-    const conversions = socket.params?.conversion || [];
-    const conversionContents = getConversions({ids: conversions, limit: 30});
-    socket.emit("conversionContents", conversionContents);
+    if (!socket.params?.conversion) {
+        socket.emit("conversionContents", []);
+    } else {
+        await getConversions({socket, ids: socket.params?.conversion, limit: 30});
+    }
 
     // forward the private message to the right recipient
     //to: conversion id
@@ -130,6 +135,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", async () => {
+        console.log('disconnect' + socket.userId)
         const matchingSockets = await io.in(socket.userId).allSockets();
         const isDisconnected = matchingSockets.size === 0;
 
@@ -143,15 +149,20 @@ io.on("connection", (socket) => {
     });
 });
 
-const getConversions = function ({ids, limit, min}) {
+const getConversions = async function (data) {
     const listChat = {};
     var firstChat = [];
+    let ids = data.ids || []
+    let date = data.date || 0
+    let minDate = data.min || 0
+    let limit = data.limit || 30
+
     if (ids.length > 0) {
         for (let id in ids) {
-            if (typeof min !== 'undefined') {
-                listChat[ids[id]] = modelContent.selectAllInConversionLimit({conversionId:ids[id], date:limit, minDate:min})
+            if (date > 0) {
+                listChat[ids[id]] = await modelContent.selectAllInConversionTime({conversionId:ids[id], date, minDate})
             } else {
-                listChat[ids[id]] = modelContent.selectAllInConversionLimit({conversionId:ids[id], date:limit})
+                listChat[ids[id]] = await modelContent.selectAllInConversionLimit({conversionId:ids[id], limit})
             }
             listChat[ids[id]] = listChat[ids[id]] || [];
             let last = listChat[ids[id]].at(-1) || null;
@@ -165,7 +176,7 @@ const getConversions = function ({ids, limit, min}) {
         }
     }
 
-    return [listChat, firstChat];
+    data.socket.emit("conversionContents", [listChat, firstChat]);
 }
 
 httpServer.listen(PORT, () =>

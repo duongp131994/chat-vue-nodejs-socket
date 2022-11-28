@@ -101,8 +101,29 @@ label {
   color: #222222;
 }
 
+$error_color : #c71b18;
+
 #app {
   margin-top: 79px;
+
+  .has-error {
+    border-color: $error_color;
+    -webkit-box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
+    box-shadow: inset 0 1px 1px rgb(0 0 0 / 8%);
+  }
+
+  .show-icon {
+    border: none;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    line-height: 2.8rem;
+    background: none;
+  }
+
+  .form-group {
+    position: relative;
+  }
 
   .login-form {
 
