@@ -23,24 +23,14 @@
     import Editor from "./Editor";
     export default {
         components: { Sidbar: Sidebar, Editor },
-        props: {
-            initialConversions: Array,
-            initialUserName: String
-        },
         data() {
             return {
-                conversions: this.initialConversions
+                conversions: []
             }
         },
         created() {
             let socket = this.$soketio
-            console.log(socket.sessionID, this.conversions, socket.userId)
-            socket.on("conversionContents", (data) => {
-                console.log(data)
-            });
-            socket.on("conversion-details", (data) => {
-                console.log(data)
-            });
+            console.log(socket.sessionID, socket.userId, this.$store.state)
         }
 
     }

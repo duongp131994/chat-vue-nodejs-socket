@@ -23,7 +23,7 @@
         <div class="App">
             <div class="vertical-center">
                 <div class="inner-block">
-                    <router-view :userAlready="onUsernameSelection" :initialConversions="conversions" :initialUserName="userName" :initialPassword="password" @changeState="changeState"/>
+                    <router-view :initialUserName="userName" :initialPassword="password" @changeState="changeState"/>
                 </div>
             </div>
         </div>
@@ -37,8 +37,6 @@
         data() {
             return {
                 userAlready: false,
-                conversions: [],
-                test: true,
                 password: localStorage.getItem("chatUserPass"),
                 userName: localStorage.getItem("chatUserName")
             };
@@ -47,38 +45,63 @@
             changeState(datas) {
                 datas.map(data => this[data[0]] = data[1])
             },
-            onUsernameSelection() {
-
-            },
             onLogOut() {
                 this.userAlready = false;
                 localStorage.removeItem('chatUserName');
                 router.push({ name: 'login'})
             }
         },
-        created() {
+        beforeCreate() {
             let socket = this.$soketio
-
-            if (this.userName && this.password) {
-                console.log( this.userName, this.password)
-                socket.auth = {username: this.userName, password: this.password, createNew: false};
+            if (localStorage.getItem("chatUserPass") && localStorage.getItem("chatUserName")) {
+                socket.auth = {username: localStorage.getItem("chatUserName"), password: localStorage.getItem("chatUserPass"), createNew: false};
 
                 socket.connect();
             }
+        },
+        created() {
+            let socket = this.$soketio
 
-            socket.on('session-details', ({userId, params}) => {
+            socket.on('userConnect', ({userId, params, date, username, sessionID}) => {
                 console.log(userId, params, this.userName, this.password);
 
                 this.userAlready = true;
-                this.conversions = params?.conversion;
                 localStorage.setItem("chatUserName", this.userName);
                 localStorage.setItem("chatUserPass", this.password);
 
                 // save the ID of the user
-                socket.sessionID = this.conversions[0] || null;
+                socket.sessionID = params?.conversion[0] || null;
                 socket.userId = userId;
 
+                console.log(312)
+                this.$store.commit('replace', ['user', {conversions: params?.conversion, sessionID, username, date, userId}])
+
                 router.push({ name: 'home'})
+            })
+
+            socket.on('conversionContents', (data) => {
+                let contents = data[0]
+                let room = data[1][0]
+                this.$store.commit('replace', ['conversionContents', contents])
+                this.$store.commit('update', ['user', {room}])
+            })
+
+            socket.on('conversion-details', async (datas) => {
+                let rooms = {}
+                let users = {}
+                await datas.map((data) => {
+                    let room = data[0]
+                    rooms[room?.id] = {id: room?.id, name: room?.name, users: JSON.parse(room?.users)}
+
+                    for (let i in data[1]) {
+                        let user = data[1][i]
+                        if (user!== null) {
+                            users[user.userId] = user
+                        }
+                    }
+                })
+                this.$store.commit('replace', ['rooms', rooms])
+                this.$store.commit('replace', ['users', users])
             })
 
             if (!this.userAlready) {
