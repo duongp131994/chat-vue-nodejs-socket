@@ -112,9 +112,6 @@ io.on("connection", async (socket) => {
         console.log(`new user connection :${socket.userId}`);
     }
 
-    //join room
-    console.log(socket.userId);
-    socket.join(socket.userId);
 
     //pass session details
     socket.emit('session-details', {
@@ -196,7 +193,7 @@ const getConversionsContents = async function (data) {
     let date = data.date || 0
     let minDate = data.min || 0
     let limit = data.limit || 30
-
+    let firstRoom = 1
     if (ids.length > 0) {
         for (let id in ids) {
             if (date > 0) {
@@ -209,12 +206,18 @@ const getConversionsContents = async function (data) {
             if (firstChat.length > 0) {
                 if (last?.send_date > firstChat[1]) {
                     firstChat = [ids[id], last?.send_date]
+                    firstRoom = ids[id]
                 }
             } else {
                 firstChat = [ids[id], last?.send_date]
+                firstRoom = ids[id]
             }
         }
     }
+
+    //join room
+    console.log(data.socket.userId);
+    data.socket.join(firstRoom);
 
     data.socket.emit("conversionContents", [listChat, firstChat]);
 }

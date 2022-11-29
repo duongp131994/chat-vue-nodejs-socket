@@ -23,7 +23,7 @@
         <div class="App">
             <div class="vertical-center">
                 <div class="inner-block">
-                    <router-view :userAlready="onUsernameSelection" :conversions="conversions" :initialUserName="userName" :initialPassword="password" @changeState="changeState"/>
+                    <router-view :userAlready="onUsernameSelection" :initialConversions="conversions" :initialUserName="userName" :initialPassword="password" @changeState="changeState"/>
                 </div>
             </div>
         </div>
@@ -76,6 +76,7 @@
 
                 // save the ID of the user
                 socket.sessionID = this.conversions[0] || null;
+                socket.userId = userId;
 
                 router.push({ name: 'home'})
             })

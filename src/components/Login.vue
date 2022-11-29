@@ -28,7 +28,6 @@
     </div>
 </template>
 <script>
-    import socket from "../socket";
     export default {
         props: {
             initialPassword: String,
