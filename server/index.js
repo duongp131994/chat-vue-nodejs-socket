@@ -24,7 +24,7 @@ async function craeteRoot() {
     }
     let Conversion = await modelConversion.selectConversion({id: 1})
     if (!(Conversion && Conversion.length > 0)) {
-        await modelConversion.insertInto({name: 'Welcome', users: 1})
+        await modelConversion.insertInto({name: 'Welcome', users: [1]})
     }
 }
 
@@ -58,7 +58,6 @@ io.use(async (socket, next) => {
 
     let user = await modelUser.selectUser({userName});
 
-
     if (createNew) {
         socket.newUser = true;
         if (!(user && user.length > 0)) {
@@ -89,6 +88,8 @@ io.use(async (socket, next) => {
 });
 
 io.on("connection", async (socket) => {
+    const sessionID = socket.id;
+
     if (socket.error) {
         socket.join(randomId);
         socket.emit('error-connection', {
@@ -103,20 +104,32 @@ io.on("connection", async (socket) => {
 
     if (socket.newUser) {
         console.log(`new user connection`);
-        const user = await modelUser.insertUser({userName:socket.username, password:socket.cryptoPassword})
+        let conversion = await modelConversion.insertInto({name: 'Welcome', users: [1]})
+        let room = conversion.insertId
+
+        const user = await modelUser.insertUser({userName:socket.username, password:socket.cryptoPassword, params: {conversion: [room]}})
         socket.userId = user.insertId;
         socket.date = Date.now();
         socket.params = {
-            conversion: [1]
+            conversion: [room]
         };
+
+        await modelConversion.updateInto({id: room, users: [1, socket.userId]})
+        await modelContent.insertContent({content: 'Welcome to vndandelions.com ', conversion_id: room, user_id: 1})
         console.log(`new user connection :${socket.userId}`);
     }
 
-
     //pass session details
+    io.to(`${sessionID}`).emit('hey', 'I just met you' + sessionID);
     socket.emit('session-details', {
         userId: socket.userId,
         params: socket.params
+    })
+
+    sessionStore.saveSession(socket.userId, {
+        userId: socket.userId,
+        username: socket.username,
+        connected: true,
     })
 
     //user new connect
@@ -141,18 +154,44 @@ io.on("connection", async (socket) => {
         await getConversions({socket, ids: socket.params?.conversion});
     }
 
+    socket.on("joinToRoom", async (room) => {
+        socket.join(room)
+
+        socket.to(room).emit("newUserJoin", socket.userId);
+    })
+
+    socket.on("addUserConversion", async ({userName, room}) => {
+        let user = await modelUser.selectUser({userName});
+
+        if (!(user && user.length > 0)) {
+            socket.emit("addUserConversionReturn", [false, room]);
+        } else {
+            let conversion = await modelConversion.selectConversion({id: room})
+            let users = JSON.parse(conversion[0].users)
+
+            await modelConversion.updateInto({id: room, users: users.push(user[0].id)})
+            let sessionUser = sessionStore.findSession(user[0].id)
+
+            socket.emit("addUserConversionReturn", [true, room, sessionUser]);
+
+            if (sessionUser.connected) {//user added to a room
+                socket.to(user[0].id).emit("userAddedConversionReturn", room);
+            }
+        }
+    })
+
     // forward the private message to the right recipient
     //to: conversion id
     //from: current id
-    socket.on("private message", ({ content, to }) => {
-        console.log(content, to, socket.userId)
+    socket.on("private message", ({ content, room }) => {
+        console.log(content, room, socket.userId)
         let date = Date.now();
-        let chatContent = modelContent.insertContent({content:content, date:date, conversion_id: to, user_id:socket.userId})
+        let chatContent = modelContent.insertContent({content:content, date:date, conversion_id: room, user_id:socket.userId})
         if (typeof chatContent.insertId !== 'undefined') {
-            socket.to(to).to(socket.userId).emit("private message", {
+            socket.to(room).to(socket.userId).emit("private message", {
                 content,
                 from: socket.userId,
-                to,
+                room,
                 date,
             });
         }
@@ -166,7 +205,14 @@ io.on("connection", async (socket) => {
         if (isDisconnected) {
             let date = Date.now();
             // notify other users
-            socket.broadcast.emit("user disconnected", {userId: socket.userId, log_out_date:date});
+            socket.broadcast.emit("user disconnected", {userId: socket.userId, date: date, connected: false});
+
+            sessionStore.saveSession(socket.userId, {
+                userId: socket.userId,
+                username: socket.username,
+                connected: false,
+            })
+
             // update the connection status of the session
             modelUser.updateInto({id:socket.userId,log_out_date:date})
         }
@@ -175,12 +221,20 @@ io.on("connection", async (socket) => {
 
 const getConversions = async function (data) {
     const listConversions = [];
-    let ids = data.ids || []
+    let idConversions = data.ids || []
 
-    if (ids.length > 0) {
-        for (let id in ids) {
-            let conversion = await modelConversion.selectConversion({id: ids[id]}) || []
-            listConversions.push(conversion[0] || []);
+    if (idConversions.length > 0) {
+        for (let id in idConversions) {
+            let conversion = await modelConversion.selectConversion({id: idConversions[id]}) || []
+            let users = JSON.parse(conversion[0].users);
+            let user_details = [];
+            if (users.length > 0) {
+                for (let i in users) {
+                    user_details.push(sessionStore.findSession(users[i]));
+                }
+            }
+
+            listConversions.push([conversion[0] || [], user_details]);
         }
     }
 
@@ -216,8 +270,9 @@ const getConversionsContents = async function (data) {
     }
 
     //join room
-    console.log(data.socket.userId);
     data.socket.join(firstRoom);
+
+    data.socket.to(firstRoom).emit("newUserJoin", data.socket.userId);
 
     data.socket.emit("conversionContents", [listChat, firstChat]);
 }

@@ -124,7 +124,7 @@ class ModelUser extends Model {
         return new Promise((resolve, reject) => {
             let username = userName || '';
             let log_out_date = Date.now();
-            params = params || JSON.stringify({conversion: [1]});
+            params = JSON.stringify(params || {conversion: [1]});
             let b={username:username,password:password,log_out_date:log_out_date, params:params};
             this.db.query('insert into chat_user SET ?', b , function(err, result) {
                 if (err) reject(false);
@@ -200,7 +200,7 @@ class ModelConversion extends Model {
     insertInto(data) {
         return new Promise((resolve, reject) => {
             let name = data['name'] || '';
-            let users = data['users'] || JSON.stringify({});
+            let users = JSON.stringify(data['users'] || []);
             let b={name:name, users:users};
             this.db.query('insert into chat_conversion SET ?', b , function(err, result) {
                 if (err) reject(false);
@@ -209,18 +209,19 @@ class ModelConversion extends Model {
         });
     }
 
-    updateInto({data}) {
-        let sql = 'UPDATE chat_conversion SET '
+    updateInto(data) {
+        let sql = ''
         let b=[]
 
         if (typeof data['name'] !== 'undefined') {
-            sql += 'name=?'
+            sql += sql === '' ? 'name=?' : ',name=?'
             b.push(data['name'])
         }
         if (typeof data['users'] !== 'undefined') {
-            sql += ',users=?'
-            b.push(data['users'])
+            sql += sql === '' ? 'users=?' : ',users=?'
+            b.push(JSON.stringify(data['users'] || []))
         }
+        sql = 'UPDATE chat_conversion SET ' + sql
         b.push(data['id'])
 
         this.db.query(sql + ' WHERE id = ?', b , function(err, result) {
