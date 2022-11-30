@@ -63,17 +63,14 @@
             let socket = this.$soketio
 
             socket.on('userConnect', ({userId, params, date, username, sessionID}) => {
-                console.log(userId, params, this.userName, this.password);
-
                 this.userAlready = true;
                 localStorage.setItem("chatUserName", this.userName);
                 localStorage.setItem("chatUserPass", this.password);
 
                 // save the ID of the user
-                socket.sessionID = params?.conversion[0] || null;
+                socket.sessionID = sessionID || null;
                 socket.userId = userId;
 
-                console.log(312)
                 this.$store.commit('replace', ['user', {conversions: params?.conversion, sessionID, username, date, userId}])
 
                 router.push({ name: 'home'})

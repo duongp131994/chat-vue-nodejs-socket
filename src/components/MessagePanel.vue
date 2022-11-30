@@ -1,65 +1,65 @@
 <template>
   <div>
-    <div class="header">
-      <status-icon :connected="user.connected" />{{ user.username }}
-    </div>
+<!--    <div class="header">-->
+<!--      <status-icon :connected="user.connected" />{{ user.username }}-->
+<!--    </div>-->
 
-    <ul class="messages">
-      <li
-        v-for="(message, index) in user.messages"
-        :key="index"
-        class="message"
-      >
-        <div v-if="displaySender(message, index)" class="sender">
-          {{ message.fromSelf ? "(yourself)" : user.username }}
-        </div>
-        {{ message.content }}
-      </li>
-    </ul>
+<!--    <ul class="messages">-->
+<!--      <li-->
+<!--        v-for="(message, index) in user.messages"-->
+<!--        :key="index"-->
+<!--        class="message"-->
+<!--      >-->
+<!--        <div v-if="displaySender(message, index)" class="sender">-->
+<!--          {{ message.fromSelf ? "(yourself)" : user.username }}-->
+<!--        </div>-->
+<!--        {{ message.content }}-->
+<!--      </li>-->
+<!--    </ul>-->
 
-    <form @submit.prevent="onSubmit" class="form">
-      <textarea v-model="inputValue" placeholder="Your message..." class="input"></textarea>
-      <button :disabled="!isValid" class="send-button">Send</button>
-    </form>
+<!--    <form @submit.prevent="onSubmit" class="form">-->
+<!--      <textarea v-model="inputValue" placeholder="Your message..." class="input"></textarea>-->
+<!--      <button :disabled="!isValid" class="send-button">Send</button>-->
+<!--    </form>-->
   </div>
 </template>
 
 <script>
-import StatusIcon from "./StatusIcon";
-
-export default {
-  name: "MessagePanel",
-  components: {
-    StatusIcon,
-  },
-  emits: ['formSend'],
-  props: {
-    user: Object,
-  },
-  data() {
-    return {
-      inputValue: "",
-    };
-  },
-  methods: {
-    onSubmit() {
-      this.$emit("formSend", this.inputValue);
-      this.inputValue = "";
-    },
-    displaySender(message, index) {
-      return (
-        index === 0 ||
-        this.user.messages[index - 1].fromSelf !==
-          this.user.messages[index].fromSelf
-      );
-    },
-  },
-  computed: {
-    isValid() {
-      return this.inputValue.length > 0;
-    },
-  },
-};
+// import StatusIcon from "./StatusIcon";
+//
+// export default {
+//   name: "MessagePanel",
+//   components: {
+//     StatusIcon,
+//   },
+//   emits: ['formSend'],
+//   props: {
+//     user: Object,
+//   },
+//   data() {
+//     return {
+//       inputValue: "",
+//     };
+//   },
+//   methods: {
+//     onSubmit() {
+//       this.$emit("formSend", this.inputValue);
+//       this.inputValue = "";
+//     },
+//     displaySender(message, index) {
+//       return (
+//         index === 0 ||
+//         this.user.messages[index - 1].fromSelf !==
+//           this.user.messages[index].fromSelf
+//       );
+//     },
+//   },
+//   computed: {
+//     isValid() {
+//       return this.inputValue.length > 0;
+//     },
+//   },
+// };
 </script>
 
 <style scoped>
