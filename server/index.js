@@ -254,40 +254,60 @@ const getConversions = async function (data) {
     io.to(`${data.socket.id}`).emit("conversion-details", listConversions);
 }
 const getConversionsContents = async function (data) {
-    const listChat = {};
-    var firstChat = [];
+    let listChat = {};
+    let allChat = {};
+    let threeFirstChat = [];
     let ids = data.ids || []
     let date = data.date || 0
     let minDate = data.min || 0
     let limit = data.limit || 30
-    let firstRoom = 1
+    let threeFirstRoom = []
     if (ids.length > 0) {
         for (let id in ids) {
             if (date > 0) {
-                listChat[ids[id]] = await modelContent.selectAllInConversionTime({conversionId:ids[id], date, minDate})
+                allChat[ids[id]] = await modelContent.selectAllInConversionTime({conversionId:ids[id], date, minDate})
             } else {
-                listChat[ids[id]] = await modelContent.selectAllInConversionLimit({conversionId:ids[id], limit})
+                allChat[ids[id]] = await modelContent.selectAllInConversionLimit({conversionId:ids[id], limit})
             }
-            listChat[ids[id]] = listChat[ids[id]] || [];
+            allChat[ids[id]] = allChat[ids[id]] || [];
+
+            //join all room
+            data.socket.join(ids[id]);
+
+            //get 3 chat join the closest
             let last = listChat[ids[id]].at(-1) || null;
-            if (firstChat.length > 0) {
-                if (last?.send_date > firstChat[1]) {
-                    firstChat = [ids[id], last?.send_date]
-                    firstRoom = ids[id]
+            if (threeFirstChat.length < 1) {
+                threeFirstChat = [last?.send_date]
+                threeFirstRoom = [ids[id]]
+                listChat = allChat[ids[id]]
+            }
+
+            for(let i = 0; i < threeFirstChat.length; i++) {
+                if (threeFirstChat[i] < last?.send_date) {
+                    threeFirstChat.splice(i, 0, last?.send_date);
+                    threeFirstRoom.splice(i, 0, ids[id]);
+                    listChat.splice(i, 0, allChat[ids[id]]);
                 }
-            } else {
-                firstChat = [ids[id], last?.send_date]
-                firstRoom = ids[id]
+            }
+
+            if (threeFirstChat.length < 3) {
+                threeFirstChat.push(last?.send_date)
+                threeFirstRoom.push(ids[id])
+                listChat.push(allChat[ids[id]])
+            }
+
+            if (threeFirstChat.length > 3) {
+                threeFirstChat.slice(0, 3)
+                threeFirstRoom.slice(0, 3)
+                listChat.slice(0, 3)
             }
         }
+
+        //also load chat content in 3 room join the closest
+        io.to(`${data.socket.id}`).emit("conversionContents", [listChat, threeFirstRoom]);
+
+        data.socket.to(threeFirstRoom[0]).emit("newUserJoin", data.socket.userId);
     }
-
-    //join room
-    data.socket.join(firstRoom);
-
-    io.to(`${data.socket.id}`).emit("conversionContents", [listChat, firstChat]);
-
-    data.socket.to(firstRoom).emit("newUserJoin", data.socket.userId);
 }
 
 const getSessionID = function (id) {

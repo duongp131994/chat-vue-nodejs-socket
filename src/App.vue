@@ -81,9 +81,10 @@
 
             socket.on('conversionContents', (data) => {
                 let contents = data[0]
+                let threeFirstRooms = data[1]
                 let room = data[1][0]
                 this.$store.commit('replace', ['conversionContents', contents])
-                this.$store.commit('update', ['user', {room}])
+                this.$store.commit('update', ['user', {room, threeFirstRooms}])
             })
 
             socket.on('conversion-details', async (datas) => {
