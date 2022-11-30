@@ -99,6 +99,7 @@ io.on("connection", async (socket) => {
         return false;
     }
 
+    console.clear()
     console.log('connection!')
 
     if (socket.newUser) {
@@ -275,31 +276,31 @@ const getConversionsContents = async function (data) {
             data.socket.join(ids[id]);
 
             //get 3 chat join the closest
-            let last = listChat[ids[id]].at(-1) || null;
+            let last = allChat[ids[id]].at(-1) || null;
             if (threeFirstChat.length < 1) {
                 threeFirstChat = [last?.send_date]
                 threeFirstRoom = [ids[id]]
                 listChat = allChat[ids[id]]
-            }
-
-            for(let i = 0; i < threeFirstChat.length; i++) {
-                if (threeFirstChat[i] < last?.send_date) {
-                    threeFirstChat.splice(i, 0, last?.send_date);
-                    threeFirstRoom.splice(i, 0, ids[id]);
-                    listChat.splice(i, 0, allChat[ids[id]]);
+            } else {
+                for(let i = 0; i < threeFirstChat.length; i++) {
+                    if (threeFirstChat[i] < last?.send_date) {
+                        threeFirstChat.splice(i, 0, last?.send_date);
+                        threeFirstRoom.splice(i, 0, ids[id]);
+                        listChat.splice(i, 0, allChat[ids[id]]);
+                    }
                 }
-            }
 
-            if (threeFirstChat.length < 3) {
-                threeFirstChat.push(last?.send_date)
-                threeFirstRoom.push(ids[id])
-                listChat.push(allChat[ids[id]])
-            }
+                if (threeFirstChat.length < 3) {
+                    threeFirstChat.push(last?.send_date)
+                    threeFirstRoom.push(ids[id])
+                    listChat.push(allChat[ids[id]])
+                }
 
-            if (threeFirstChat.length > 3) {
-                threeFirstChat.slice(0, 3)
-                threeFirstRoom.slice(0, 3)
-                listChat.slice(0, 3)
+                if (threeFirstChat.length > 3) {
+                    threeFirstChat.slice(0, 3)
+                    threeFirstRoom.slice(0, 3)
+                    listChat.slice(0, 3)
+                }
             }
         }
 
