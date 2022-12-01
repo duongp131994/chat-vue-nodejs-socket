@@ -1,15 +1,15 @@
 <template>
-    <div>
-        <div class="left-panel">
-            <Sidebar :initialUser="user" :initialRooms="rooms" @changeRoom="changeRoom" />
-        </div>
+    <div class="left-panel">
+        <Sidebar :key="componentKey" :keyA="componentKey" :initialUser="user" :initialRooms="rooms" @changeRoom="changeRoom" />
+    </div>
+
+    <div class="right-panel"></div>
 <!--        <message-panel-->
 <!--                v-if="selectedUser"-->
 <!--                :user="selectedUser"-->
 <!--                @formSend="onMessage"-->
 <!--                class="right-panel"-->
 <!--        />-->
-    </div>
 </template>
 
 <script>
@@ -20,8 +20,31 @@
         components: { Sidebar, Editor, MessagePanel },
         data() {
             return {
-                user: this.$store.state.user,
-                rooms: this.$store.state.rooms
+                componentKey: 0
+            }
+        },
+        computed: {
+            user: function() {
+                console.log(this.$store.state.user)
+                return this.$store.state.user
+            },
+            rooms: function() {
+                console.log(this.$store.state.rooms)
+                return this.$store.state.rooms
+            }
+        },
+        watch: {
+            user: {
+                handler: function () {
+                    this.componentKey++
+                },
+                deep: true
+            },
+            rooms: {
+                handler: function () {
+                    this.componentKey++
+                },
+                deep: true
             }
         },
         methods: {
@@ -31,7 +54,6 @@
         },
         created() {
             let socket = this.$soketio
-            console.log(socket.sessionID, socket.userId, this.$store.state)
         }
 
     }

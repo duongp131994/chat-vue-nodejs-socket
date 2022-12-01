@@ -11,6 +11,7 @@
     "start": "node server/index.js"
   },
   "dependencies": {
+    "@coreui/vue": "^4.5.0",
     "@vue/cli-service": "^5.0.8",
     "bootstrap": "^5.2.3",
     "core-js": "^3.26.1",

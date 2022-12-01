@@ -1,7 +1,7 @@
 <template>
-    <div class="vue-tempalte">
+    <div class="vue-tempalte" :class="{'login-form': !userAlready }">
         <!-- Navigation -->
-        <nav class="navbar shadow bg-white rounded justify-content-between flex-nowrap flex-row fixed-top">
+        <nav class="navbar shadow bg-white justify-content-between flex-nowrap flex-row">
             <div class="container">
                 <a class="navbar-brand float-left" href="./" target="_blank">
                     vndandelions.com
@@ -22,7 +22,10 @@
         <!-- Main -->
         <div class="App">
             <div class="vertical-center">
-                <div class="inner-block">
+                <div v-if="!userAlready" class="inner-block">
+                    <router-view :initialUserName="userName" :initialPassword="password" @changeState="changeState"/>
+                </div>
+                <div v-else class="chat-window">
                     <router-view :initialUserName="userName" :initialPassword="password" @changeState="changeState"/>
                 </div>
             </div>
@@ -59,10 +62,10 @@
                 socket.connect();
             }
         },
-        created() {
+        async created() {
             let socket = this.$soketio
 
-            socket.on('userConnect', ({userId, params, date, username, sessionID}) => {
+            await socket.on('userConnect', ({userId, params, date, username, sessionID}) => {
                 this.userAlready = true;
                 localStorage.setItem("chatUserName", this.userName);
                 localStorage.setItem("chatUserPass", this.password);
@@ -76,7 +79,7 @@
                 router.push({ name: 'home'})
             })
 
-            socket.on('conversionContents', (data) => {
+            await socket.on('conversionContents', (data) => {
                 let contents = data[0]
                 let threeFirstRooms = data[1]
                 let room = data[1][0]
@@ -84,7 +87,7 @@
                 this.$store.commit('update', ['user', {room, threeFirstRooms}])
             })
 
-            socket.on('conversion-details', async (datas) => {
+            await socket.on('conversion-details', async (datas) => {
                 let rooms = {}
                 let users = {}
                 await datas.map((data) => {
@@ -106,8 +109,11 @@
                 router.push({ name: 'login'})
             }
 
+            this.$soketio.on("connect_error", (err) => {
+                // alert(`connect error due to ${err.message}`);
+            });
             socket.on('error-connection', (data) => {
-                alert(data.error);
+                // alert(data.error);
                 router.push({ name: 'login'})
             })
         },

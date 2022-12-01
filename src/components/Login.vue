@@ -1,5 +1,5 @@
 <template>
-    <div class="vue-tempalte login-form">
+    <div class="login-form">
         <h3>Sign In</h3>
         <div class="form-group">
             <label>Email address</label>
@@ -61,9 +61,6 @@
             }
         },
         created() {
-            this.$soketio.on("connect_error", (err) => {
-                alert(`connect error due to ${err.message}`);
-            });
         },
         destroyed() {
             this.$soketio.off("connect_error");
