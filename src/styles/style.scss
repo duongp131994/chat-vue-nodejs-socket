@@ -100,67 +100,30 @@ $white_color: #ffffff;
 $smoke_color: rgb(163 166 170);
 $sidebar-background: #2f3136;
 $botton-background: rgb(32 34 37);
+$item-background:  #2f3136;
+$item-background-hover: rgba(79,84,92,0.6);
 
 #app {
-
-  .vue-tempalte {
-    display: flex;
-    flex-wrap: wrap;
-    height: 100vh;
-
-    &.login-form {
-      .App {
-        margin-top: 10px;
-      }
-
-      .vertical-center {
-        display: flex;
-        text-align: left;
-        justify-content: center;
-        flex-direction: column;
-      }
-    }
-
-    .chat-window {
-      display: flex;
-      height: 100%;
-      background: rgb(54 57 63);
-
-      .left-panel {
-        background: $sidebar-background;
-      }
-
-      .searchBarComponent {
-        width: 100%;
-        height: 28px;
-        overflow: hidden;
-        border-radius: 4px;
-        background-color: $botton-background;
-        -webkit-box-shadow: none;
-        box-shadow: none;
-        color: $smoke_color;
-        text-align: left;
-        text-overflow: ellipsis;
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 24px;
-        white-space: nowrap;
-        border: none;
-      }
-    }
+  * {
+    box-sizing: border-box;
   }
 
   nav.navbar {
     top: 0;
     width: 100%;
+    height: 50px;
   }
 
   .name {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    color: $white_color;
+    color: $smoke_color;
     font-weight: 600;
+    vertical-align: middle;
+    font-size: 1em;
+    line-height: 1;
+    max-width: 180px;
   }
 
   .description {
@@ -205,6 +168,121 @@ $botton-background: rgb(32 34 37);
 
     button {
       margin-top: 10px;
+    }
+  }
+
+  .avatar {
+    margin-right: 15px;
+  }
+
+  .number {
+    color: $smoke_color;
+    width: 100%;
+    font-size: 12px;
+  }
+
+  .vue-tempalte {
+    display: flex;
+    flex-wrap: wrap;
+    height: 100vh;
+
+    .App {
+      height: calc(100vh - 50px);
+    }
+
+    &.login-form {
+      .App {
+        margin-top: 10px;
+      }
+
+      .vertical-center {
+        display: flex;
+        text-align: left;
+        justify-content: center;
+        flex-direction: column;
+      }
+    }
+
+    .chat-window {
+      display: flex;
+      height: 100%;
+      background: rgb(54 57 63);
+
+      .left-panel {
+        background: $sidebar-background;
+        position: relative;
+      }
+
+      .searchBarComponent {
+        width: 100%;
+        height: 28px;
+        overflow: hidden;
+        border-radius: 4px;
+        background-color: $botton-background;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+        color: $smoke_color;
+        text-align: left;
+        text-overflow: ellipsis;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 24px;
+        white-space: nowrap;
+        border: none;
+      }
+
+      .bottom-sidebar {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+      }
+
+      .list-conversations {
+        overflow-y: auto;
+
+        .conversation {
+          background: $item-background;
+          border-radius: 5px;
+          position: relative;
+          cursor: pointer;
+
+          .setting {
+            display: none;
+            position: absolute;
+            right: 30px;
+            top: 13px;
+            line-height: inherit;
+            color: #70757a;
+            outline: none;
+            width: 20px;
+          }
+          .close {
+            display: none;
+            position: absolute;
+            right: 5px;
+            top: 13px;
+            line-height: inherit;
+            color: #70757a;
+            outline: none;
+            width: 20px;
+          }
+
+          &:hover {
+            background: $item-background-hover;
+
+            .close, .setting {
+              display: block;
+            }
+          }
+        }
+
+        .conversationName {
+          display: inline-flex;
+          line-height: inherit;
+          flex-wrap: wrap;
+          vertical-align: middle;
+        }
+      }
     }
   }
 }
