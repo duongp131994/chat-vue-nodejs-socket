@@ -4,20 +4,16 @@
     </div>
 
     <div class="right-panel"></div>
-<!--        <message-panel-->
-<!--                v-if="selectedUser"-->
-<!--                :user="selectedUser"-->
-<!--                @formSend="onMessage"-->
-<!--                class="right-panel"-->
-<!--        />-->
+
 </template>
 
 <script>
     import Sidebar from "./Sidebar";
     import Editor from "./Editor";
     import MessagePanel from "./MessagePanel";
+
     export default {
-        components: { Sidebar, Editor, MessagePanel },
+        components: { Sidebar, Editor, MessagePanel},
         data() {
             return {
                 componentKey: 0
@@ -53,6 +49,7 @@
             }
         },
         created() {
+            console.log('chat')
             let socket = this.$soketio
         }
 

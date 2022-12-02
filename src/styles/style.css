@@ -121,7 +121,7 @@ label {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  color: #a3a6aa;
+  color: rgb(163, 166, 170);
   font-weight: 600;
   vertical-align: middle;
   font-size: 1em;
@@ -163,7 +163,7 @@ label {
   margin-right: 15px;
 }
 #app .number {
-  color: #a3a6aa;
+  color: rgb(163, 166, 170);
   width: 100%;
   font-size: 12px;
 }
@@ -187,7 +187,7 @@ label {
 #app .vue-tempalte .chat-window {
   display: flex;
   height: 100%;
-  background: #36393f;
+  background: rgb(54, 57, 63);
 }
 #app .vue-tempalte .chat-window .left-panel {
   background: #2f3136;
@@ -198,10 +198,10 @@ label {
   height: 28px;
   overflow: hidden;
   border-radius: 4px;
-  background-color: #202225;
+  background-color: rgb(32, 34, 37);
   -webkit-box-shadow: none;
   box-shadow: none;
-  color: #a3a6aa;
+  color: rgb(163, 166, 170);
   text-align: left;
   text-overflow: ellipsis;
   font-size: 14px;
