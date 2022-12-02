@@ -1,14 +1,17 @@
 <template>
     <CModal backdrop="static" :visible="visible" @close="onClose">
         <CModalHeader>
-            <CModalTitle>Modal title</CModalTitle>
+            <CModalTitle>{{headerTitle}}</CModalTitle>
         </CModalHeader>
-        <CModalBody>Woohoo, you're reading this text in a modal!</CModalBody>
+        <CModalBody>
+            {{contentBody}}
+            <slot name="bodySlot" ></slot>
+        </CModalBody>
         <CModalFooter>
-            <CButton color="secondary" @click="() => { visible = false }">
+            <CButton color="secondary" @click="onClose">
                 Close
             </CButton>
-            <CButton color="primary">Save changes</CButton>
+            <CButton color="primary" @click="onSubmit">Save changes</CButton>
         </CModalFooter>
     </CModal>
 </template>
@@ -17,21 +20,34 @@
     export default {
         components: { CModal, CModalHeader, CModalTitle, CModalBody, CButton, CModalFooter},
         emits: ['showHidenModal'],
+        data() {
+            return {
+                headerTitle: this.initialHeaderTitle,
+                contentBody: this.initialContentBody,
+            };
+        },
         computed: {
             visible: function() {
-                console.log(this.visible, this.initialVisibleModal)
                 return this.initialVisibleModal
             },
         },
         props: {
-            initialVisibleModal: Boolean
+            initialVisibleModal: Boolean,
+            initialHeaderTitle: String,
+            initialContentBody: Object
         },
         methods: {
-            onClose(e) {
+            onClose() {
                 this.visible = false;
-                console.log(this.visible)
                 this.$emit("showHidenModal", this.visible);
+            },
+            onSubmit() {
+                // this.$emit("submitModal", this.visible);
+                this.onClose()
             }
+        },
+        setup(props, { slots }) {
+            console.log(props, slots)
         }
     }
     //https://viblo.asia/p/vuejs-tao-thanh-phan-dialog-tai-su-dung-nhieu-lan-WAyK8V89lxX
