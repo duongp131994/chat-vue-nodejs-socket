@@ -34,6 +34,7 @@
 </template>
 <script>
     import router from './router'
+    import socket from "./socket";
     export default {
         name: "App",
         components: {},
@@ -54,8 +55,7 @@
                 router.push({ name: 'login'})
             }
         },
-        beforeCreate() {
-            let socket = this.$soketio
+        setup(props, context) {
             if (localStorage.getItem("chatUserPass") && localStorage.getItem("chatUserName")) {
                 socket.auth = {username: localStorage.getItem("chatUserName"), password: localStorage.getItem("chatUserPass"), createNew: false};
 
@@ -84,7 +84,7 @@
                 let threeFirstRooms = data[1]
                 let room = data[1][0]
                 this.$store.commit('replace', ['conversionContents', contents])
-                this.$store.commit('update', ['user', {room, threeFirstRooms}])
+                this.$store.commit('update', [['user'], {room, threeFirstRooms}])
             })
 
             await socket.on('conversion-details', async (datas) => {
@@ -108,6 +108,21 @@
             if (!this.userAlready) {
                 router.push({ name: 'login'})
             }
+
+            socket.on("user connected", (users) => {
+                if (this.$store.state.users[users.userId]) {
+                    this.$store.commit('update', [['users', users.userId], {connected: true, sessionID: users.sessionID, date: users.date}])
+                } else {
+                    this.$store.commit('update', [['users', users.userId], {
+                        connected: true,
+                        date: users.date,
+                        sessionID: users.sessionID,
+                        username: users.username,
+                        userId: users.userId
+                        }
+                    ])
+                }
+            });
 
             this.$soketio.on("connect_error", (err) => {
                 // alert(`connect error due to ${err.message}`);

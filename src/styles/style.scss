@@ -114,6 +114,15 @@ $item-background-hover: rgba(79,84,92,0.6);
     height: 50px;
   }
 
+  label {
+    margin-bottom: 5px;
+    font-weight: 300;
+    color: inherit;
+    font-size: inherit;
+    padding: 0;
+    outline: 0;
+  }
+
   .name {
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -175,10 +184,24 @@ $item-background-hover: rgba(79,84,92,0.6);
     margin-right: 15px;
   }
 
+  .avatar_tooltip {
+    padding: 0;
+    border-radius: 20px;
+    background: transparent;
+
+    .avatar {
+      margin: 0;
+    }
+  }
+
   .number {
     color: $smoke_color;
     width: 100%;
     font-size: 12px;
+  }
+
+  .list_user {
+    overflow: hidden;
   }
 
   .vue-tempalte {

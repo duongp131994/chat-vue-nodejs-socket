@@ -1,9 +1,11 @@
 <template>
     <div class="left-panel">
-        <Sidebar :key="componentKey" :keyA="componentKey" :initialUser="user" :initialRooms="rooms" @changeRoom="changeRoom" />
+        <Sidebar :key="componentKey" :initialUser="user" :initialRooms="rooms" @changeRoom="changeRoom"/>
     </div>
 
-    <div class="right-panel"></div>
+    <div class="right-panel">
+        <MessagePanel />
+    </div>
 
 </template>
 
@@ -11,6 +13,7 @@
     import Sidebar from "./Sidebar";
     import Editor from "./Editor";
     import MessagePanel from "./MessagePanel";
+    import ListUser from "./ListUser";
 
     export default {
         components: { Sidebar, Editor, MessagePanel},
@@ -44,14 +47,13 @@
             }
         },
         methods: {
-            changeRoom(datas) {
-                console.log(datas)
+            changeRoom(room) {
+                console.log(room)
             }
         },
         created() {
             console.log('chat')
             let socket = this.$soketio
         }
-
     }
 </script>

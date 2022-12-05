@@ -140,6 +140,7 @@ io.on("connection", async (socket) => {
     socket.broadcast.emit("user connected", {
         userId: socket.userId,
         username: socket.username,
+        sessionID: sessionID,
         date: socket.date,
         connected: true,
     });

@@ -19,7 +19,12 @@
     import {CModal, CModalHeader, CModalTitle, CModalBody, CButton, CModalFooter} from '@coreui/vue';
     export default {
         components: { CModal, CModalHeader, CModalTitle, CModalBody, CButton, CModalFooter},
-        emits: ['showHidenModal'],
+        emits: ['showHidenModal', 'submitModal'],
+        props: {
+            initialVisibleModal: Boolean,
+            initialHeaderTitle: String,
+            initialContentBody: Object
+        },
         data() {
             return {
                 headerTitle: this.initialHeaderTitle,
@@ -31,24 +36,16 @@
                 return this.initialVisibleModal
             },
         },
-        props: {
-            initialVisibleModal: Boolean,
-            initialHeaderTitle: String,
-            initialContentBody: Object
-        },
         methods: {
             onClose() {
                 this.visible = false;
                 this.$emit("showHidenModal", this.visible);
             },
             onSubmit() {
-                // this.$emit("submitModal", this.visible);
+                this.$emit("submitModal");
                 this.onClose()
             }
         },
-        setup(props, { slots }) {
-            console.log(props, slots)
-        }
     }
     //https://viblo.asia/p/vuejs-tao-thanh-phan-dialog-tai-su-dung-nhieu-lan-WAyK8V89lxX
 </script>
